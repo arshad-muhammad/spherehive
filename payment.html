@@ -307,6 +307,70 @@
         .secondary-button:hover {
             background: rgba(0, 255, 149, 0.1);
         }
+
+        .success-details {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(0, 255, 149, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 149, 0.2);
+        }
+
+        .success-details h3 {
+            color: var(--success-color);
+            margin-bottom: 15px;
+        }
+
+        .success-details p {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .primary-button {
+            background: linear-gradient(45deg, var(--primary-color), #80ffbb);
+            color: #000000;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .primary-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 149, 0.3);
+        }
+
+        .timer-container {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .timer {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .timer.warning {
+            color: #ffaa00;
+        }
+
+        .timer.danger {
+            color: var(--error-color);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -361,92 +425,59 @@
 
     <div id="paymentOptions" style="display: none;" class="payment-options">
         <div class="qr-section">
+            <div class="timer-container">
+                <p>Session expires in: <span id="timer" class="timer">10:00</span></p>
+            </div>
             <img id="qrCode" alt="Payment QR Code" style="max-width: 200px; margin: 20px auto; display: block;">
             <div class="payment-details">
                 <p>UPI ID: <span id="upiIdDisplay"></span></p>
                 <p>Amount: ₹10</p>
                 <button id="copyUpiId" class="secondary-button">Copy UPI ID</button>
             </div>
+            <button id="verifyPayment" class="primary-button" style="display: none; margin-top: 20px;">
+                I Have Made the Payment
+            </button>
         </div>
     </div>
 
     <script>
-        // Encryption function using SHA-256
-        async function generatePaymentSignature(timestamp) {
-            const secret = 'H@ckW1se2024'; // This should be stored securely server-side
-            const amount = '10'; // Changed to '10'
-            const dataToHash = `${amount}-${timestamp}-${secret}`;
+        let timerInterval;
+
+        function startTimer(duration) {
+            let timer = duration;
+            const timerDisplay = document.getElementById('timer');
+            const verifyButton = document.getElementById('verifyPayment');
             
-            const msgBuffer = new TextEncoder().encode(dataToHash);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+            clearInterval(timerInterval); // Clear any existing timer
 
-        // Add this function at the beginning of your script section
-        function getEncryptedUpiId() {
-            // Base64 encoded and obfuscated UPI ID
-            const encodedParts = [
-                'bXVoYW1t', 
-                'YWRhcnNo', 
-                'YWRyYTJA', 
-                'b2tzYmk='
-            ];
-            
-            try {
-                // Decode and verify the UPI ID
-                const decodedUpi = encodedParts
-                    .map(part => atob(part))
-                    .join('');
-                
-                // Verify if the UPI ID matches the expected pattern
-                if (decodedUpi !== 'muhammadarshadra2@oksbi') {
-                    throw new Error('UPI ID verification failed');
+            timerInterval = setInterval(function() {
+                const minutes = parseInt(timer / 60, 10);
+                const seconds = parseInt(timer % 60, 10);
+
+                const displayMinutes = minutes < 10 ? "0" + minutes : minutes;
+                const displaySeconds = seconds < 10 ? "0" + seconds : seconds;
+
+                timerDisplay.textContent = displayMinutes + ":" + displaySeconds;
+
+                // Add warning colors
+                if (timer <= 180) { // Last 3 minutes
+                    timerDisplay.className = 'timer danger';
+                } else if (timer <= 300) { // Last 5 minutes
+                    timerDisplay.className = 'timer warning';
                 }
-                
-                return decodedUpi;
-            } catch {
-                // If tampering is detected, throw an error
-                throw new Error('Invalid UPI configuration');
-            }
-        }
 
-        // Add this function to generate QR code URL using QR Server API
-        function generateQRCode(upiUrl) {
-            return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
-        }
-
-        // Add this function to send details to admin
-        async function sendDetailsToAdmin(formData, paymentDetails) {
-            try {
-                const adminEmail = 'muhd.arshadra@gmail.com';
-                const emailData = {
-                    to: adminEmail,
-                    subject: `New Team Registration - ${formData.teamName}`,
-                    formData: formData,
-                    paymentDetails: paymentDetails,
-                    timestamp: new Date().toLocaleString()
-                };
-
-                // Send to your backend endpoint
-                const response = await fetch('/api/send-registration-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(emailData)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to send notification');
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    // Session expired
+                    document.getElementById('paymentOptions').style.display = 'none';
+                    document.getElementById('registrationForm').style.display = 'block';
+                    localStorage.removeItem('pendingRegistration');
+                    showMessage('Session expired! Please try again.', 'error');
+                    verifyButton.disabled = true;
                 }
-            } catch (error) {
-                console.error('Error sending notification:', error);
-                showMessage('Registration successful but failed to send notification', 'error');
-            }
+            }, 1000);
         }
 
-        // Modify the form submit handler to include payment verification and notification
         document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -471,7 +502,7 @@
                     }
                 ],
                 timestamp: Date.now(),
-                registrationId: 'REG' + Date.now() // Unique registration ID
+                registrationId: 'REG' + Date.now()
             };
 
             // Add optional member if details are provided
@@ -489,75 +520,195 @@
                 const upiId = getEncryptedUpiId();
                 const upiUrl = `upi://pay?pa=${upiId}&pn=HackWise Registration&am=10&cu=INR&tn=Team Registration Fee - ${formData.registrationId}&mc=5411&tr=${formData.registrationId}`;
 
-                // Store registration data in localStorage for post-payment processing
                 localStorage.setItem('pendingRegistration', JSON.stringify(formData));
 
-                // Check if the user is on mobile
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                // Always show QR code
+                const qrCodeUrl = generateQRCode(upiUrl);
+                document.getElementById('qrCode').src = qrCodeUrl;
+                document.getElementById('upiIdDisplay').textContent = upiId;
+                document.getElementById('paymentOptions').style.display = 'block';
+                e.target.style.display = 'none';
 
-                if (isMobile) {
-                    // For mobile devices, directly open UPI app
-                    window.location.href = upiUrl;
-                } else {
-                    // For desktop, show QR code and UPI details
-                    const qrCodeUrl = generateQRCode(upiUrl);
-                    document.getElementById('qrCode').src = qrCodeUrl;
-                    document.getElementById('upiIdDisplay').textContent = upiId;
-                    document.getElementById('paymentOptions').style.display = 'block';
-                    
-                    // Hide the form
-                    e.target.style.display = 'none';
-                }
+                // Add manual payment verification button
+                document.getElementById('verifyPayment').style.display = 'block';
 
-                // Add payment verification listener
-                window.addEventListener('focus', async function onFocus() {
-                    try {
-                        // Check payment status (you'll need to implement this endpoint)
-                        const paymentStatus = await checkPaymentStatus(formData.registrationId);
-                        
-                        if (paymentStatus.success) {
-                            // Send notification to admin
-                            await sendDetailsToAdmin(formData, {
-                                paymentId: paymentStatus.paymentId,
-                                amount: '10',
-                                status: 'SUCCESS',
-                                transactionId: paymentStatus.transactionId,
-                                paymentTimestamp: new Date().toISOString()
-                            });
+                // Start 10-minute timer (600 seconds)
+                startTimer(600);
 
-                            showMessage('Registration and payment successful!', 'success');
-                            localStorage.removeItem('pendingRegistration');
-                            window.removeEventListener('focus', onFocus);
-                        }
-                    } catch (error) {
-                        console.error('Error verifying payment:', error);
-                    }
-                });
-
-                showMessage('Please complete the payment using the QR code or UPI ID shown above.', 'success');
+                showMessage('Please scan the QR code or copy UPI ID to make the payment. After payment, click "Verify Payment" button.', 'success');
             } catch (error) {
                 showMessage('Payment initialization failed. Please try again.', 'error');
                 console.error('Error:', error);
             }
         });
 
-        // Add copy UPI ID functionality
-        document.getElementById('copyUpiId').addEventListener('click', function() {
-            const upiId = getEncryptedUpiId();
-            navigator.clipboard.writeText(upiId).then(() => {
-                this.textContent = 'Copied!';
-                setTimeout(() => {
-                    this.textContent = 'Copy UPI ID';
-                }, 2000);
-            });
-        });
+        // Add Instamojo success handler
+        window.onload = function() {
+            if (window.location.href.includes('payment_success')) {
+                const formData = JSON.parse(localStorage.getItem('pendingRegistration'));
+                if (formData) {
+                    sendDetailsToAdmin(formData, {
+                        status: 'SUCCESS',
+                        paymentTimestamp: new Date().toISOString()
+                    });
+                    showMessage('Registration and payment successful!', 'success');
+                    localStorage.removeItem('pendingRegistration');
+                }
+            }
+        };
 
         function showMessage(message, type) {
             const messageDiv = document.getElementById('message');
             messageDiv.textContent = message;
             messageDiv.className = `message ${type}`;
             messageDiv.style.display = 'block';
+
+            if (type === 'error' && message.includes('Session expired')) {
+                // Reset the form state
+                document.getElementById('registrationForm').reset();
+                clearInterval(timerInterval);
+            }
         }
+
+        // Restore these functions
+        async function generatePaymentSignature(timestamp) {
+            const secret = 'H@ckW1se2024';
+            const amount = '10';
+            const dataToHash = `${amount}-${timestamp}-${secret}`;
+            
+            const msgBuffer = new TextEncoder().encode(dataToHash);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function getEncryptedUpiId() {
+            const encodedParts = [
+                'bXVoYW1t', 
+                'YWRhcnNo', 
+                'YWRyYTJA', 
+                'b2tzYmk='
+            ];
+            
+            try {
+                const decodedUpi = encodedParts
+                    .map(part => atob(part))
+                    .join('');
+                
+                if (decodedUpi !== 'muhammadarshadra2@oksbi') {
+                    throw new Error('UPI ID verification failed');
+                }
+                
+                return decodedUpi;
+            } catch {
+                throw new Error('Invalid UPI configuration');
+            }
+        }
+
+        function generateQRCode(upiUrl) {
+            return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+        }
+
+        // Add this function to send formatted emails
+        async function sendFormattedEmails(formData) {
+            try {
+                // Format the email content
+                const emailContent = {
+                    teamName: formData.teamName,
+                    registrationId: formData.registrationId,
+                    paymentTimestamp: new Date().toLocaleString(),
+                    amount: '₹10',
+                    teamLead: {
+                        name: formData.teamLead.name,
+                        email: formData.teamLead.email,
+                        phone: formData.teamLead.phone
+                    },
+                    members: formData.members.map(member => ({
+                        name: member.name,
+                        email: member.email,
+                        phone: member.phone
+                    }))
+                };
+
+                // Send to admin
+                await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        to: 'muhd.arshadra@gmail.com',
+                        subject: `New Team Registration - ${formData.teamName}`,
+                        content: emailContent,
+                        type: 'admin'
+                    })
+                });
+
+                // Send to team lead
+                await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        to: formData.teamLead.email,
+                        subject: 'HackWise Registration Successful',
+                        content: emailContent,
+                        type: 'team'
+                    })
+                });
+
+                return true;
+            } catch (error) {
+                console.error('Error sending emails:', error);
+                return false;
+            }
+        }
+
+        // Add payment verification handler
+        document.getElementById('verifyPayment').addEventListener('click', async function() {
+            const formData = JSON.parse(localStorage.getItem('pendingRegistration'));
+            if (!formData) {
+                showMessage('No pending registration found. Please try again.', 'error');
+                return;
+            }
+
+            try {
+                // Send emails
+                const emailsSent = await sendFormattedEmails(formData);
+                
+                if (emailsSent) {
+                    clearInterval(timerInterval); // Clear the timer
+                    showMessage('Registration and payment verified! Confirmation emails have been sent.', 'success');
+                    localStorage.removeItem('pendingRegistration');
+                    
+                    // Hide payment options and show success state
+                    document.getElementById('paymentOptions').style.display = 'none';
+                    document.getElementById('registrationForm').style.display = 'none';
+                    
+                    // Show registration details
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-details';
+                    successDiv.innerHTML = `
+                        <h3>Registration Successful!</h3>
+                        <p>Team Name: ${formData.teamName}</p>
+                        <p>Registration ID: ${formData.registrationId}</p>
+                        <p>Please check your email for confirmation details.</p>
+                    `;
+                    document.querySelector('.container').appendChild(successDiv);
+                } else {
+                    showMessage('Payment verified but failed to send confirmation emails. Please contact support.', 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to verify payment. Please try again or contact support.', 'error');
+                console.error('Error:', error);
+            }
+        });
+
+        // Clean up timer when window is closed or refreshed
+        window.addEventListener('beforeunload', function() {
+            clearInterval(timerInterval);
+        });
     </script>
 </body>
 </html>
