@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Registration Payment</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary-color: #00ff95;
+            --bg-dark: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --input-bg: #2d2d2d;
+            --input-border: #3d3d3d;
+            --input-focus: #00ff95;
+            --error-color: #ff4444;
+            --success-color: #00ff95;
+        }
+
+        body {
+            font-family: 'Inter', 'Arial', sans-serif;
+            line-height: 1.6;
+            padding: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-dark);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 35px;
+            color: var(--text-primary);
+            font-size: clamp(1.5rem, 4vw, 2.2rem);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(45deg, var(--primary-color), #80ffbb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h3 {
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            color: var(--text-secondary);
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(0, 255, 149, 0.1);
+        }
+
+        .member-section {
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            background-color: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+        }
+
+        .required {
+            color: var(--error-color);
+            margin-left: 4px;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary-color), #80ffbb);
+            color: #000000;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 255, 149, 0.2);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 149, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(0, 255, 149, 0.2);
+        }
+
+        .message {
+            padding: 16px;
+            margin-top: 24px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .success {
+            background-color: rgba(0, 255, 149, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(0, 255, 149, 0.2);
+        }
+
+        .error {
+            background-color: rgba(255, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(255, 68, 68, 0.2);
+        }
+
+        /* Glassmorphism effect for sections */
+        .member-section:hover {
+            border-color: rgba(0, 255, 149, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 255, 149, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        /* Input placeholder styling */
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--input-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+
+        /* Media Queries */
+        @media screen and (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .member-section {
+                padding: 16px;
+            }
+
+            input {
+                padding: 12px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 16px;
+            }
+
+            .member-section {
+                padding: 14px;
+            }
+
+            button {
+                padding: 14px 20px;
+            }
+        }
+
+        /* Landscape mode optimization */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            .container {
+                max-width: 100%;
+            }
+
+            .member-section {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+        }
+
+        /* Loading state for button */
+        button.loading {
+            background: linear-gradient(45deg, var(--primary-color), #80ffbb);
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Animation for success message */
+        @keyframes slideIn {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .message {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        /* Focus styles for better accessibility */
+        input:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 1px;
+        }
+
+        /* Add subtle hover effect to inputs */
+        input:hover {
+            border-color: rgba(0, 255, 149, 0.3);
+        }
+
+        .payment-options {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .qr-section {
+            text-align: center;
+        }
+
+        .payment-details {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: rgba(0, 255, 149, 0.05);
+            border-radius: 8px;
+        }
+
+        .payment-details p {
+            margin: 10px 0;
+            color: var(--text-primary);
+        }
+
+        .secondary-button {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 8px 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .secondary-button:hover {
+            background: rgba(0, 255, 149, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Team Registration Payment</h1>
+        <form id="registrationForm">
+            <div class="form-group">
+                <label>Team Name <span class="required">*</span></label>
+                <input type="text" id="teamName" required>
+            </div>
+
+            <!-- Required Members -->
+            <h3>Required Team Members</h3>
+            <div class="member-section">
+                <div class="form-group">
+                    <label>Team Lead Details (Member 1) <span class="required">*</span></label>
+                    <input type="text" id="member1Name" placeholder="Full Name" required>
+                    <input type="email" id="member1Email" placeholder="Email" required>
+                    <input type="tel" id="member1Phone" placeholder="Phone Number" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Member 2 <span class="required">*</span></label>
+                    <input type="text" id="member2Name" placeholder="Full Name" required>
+                    <input type="email" id="member2Email" placeholder="Email" required>
+                    <input type="tel" id="member2Phone" placeholder="Phone Number" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Member 3 <span class="required">*</span></label>
+                    <input type="text" id="member3Name" placeholder="Full Name" required>
+                    <input type="email" id="member3Email" placeholder="Email" required>
+                    <input type="tel" id="member3Phone" placeholder="Phone Number" required>
+                </div>
+            </div>
+
+            <!-- Optional Member -->
+            <h3>Optional Member</h3>
+            <div class="member-section">
+                <div class="form-group">
+                    <label>Member 4 (Optional)</label>
+                    <input type="text" id="member4Name" placeholder="Full Name">
+                    <input type="email" id="member4Email" placeholder="Email">
+                    <input type="tel" id="member4Phone" placeholder="Phone Number">
+                </div>
+            </div>
+
+            <button type="submit">Pay Registration Fee (₹1)</button>
+        </form>
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <div id="paymentOptions" style="display: none;" class="payment-options">
+        <div class="qr-section">
+            <img id="qrCode" alt="Payment QR Code" style="max-width: 200px; margin: 20px auto; display: block;">
+            <div class="payment-details">
+                <p>UPI ID: <span id="upiIdDisplay"></span></p>
+                <p>Amount: ₹1</p>
+                <button id="copyUpiId" class="secondary-button">Copy UPI ID</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Encryption function using SHA-256
+        async function generatePaymentSignature(timestamp) {
+            const secret = 'H@ckW1se2024'; // This should be stored securely server-side
+            const amount = '1'; // Changed from '500' to '1'
+            const dataToHash = `${amount}-${timestamp}-${secret}`;
+            
+            const msgBuffer = new TextEncoder().encode(dataToHash);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Add this function at the beginning of your script section
+        function getEncryptedUpiId() {
+            // Base64 encoded and obfuscated UPI ID
+            const encodedParts = [
+                'bXVoYW1t', // muhamm
+                'YWRhcnNo', // adarsh
+                'YWRyYTJA', // adra2@
+                'b2tzYmk=' // oksbi
+            ];
+            
+            try {
+                // Decode and verify the UPI ID
+                const decodedUpi = encodedParts
+                    .map(part => atob(part))
+                    .join('');
+                
+                // Verify if the UPI ID matches the expected pattern
+                if (decodedUpi !== 'muhammadarshadra2@oksbi') {
+                    throw new Error('UPI ID verification failed');
+                }
+                
+                return decodedUpi;
+            } catch {
+                // If tampering is detected, throw an error
+                throw new Error('Invalid UPI configuration');
+            }
+        }
+
+        // Add this function to generate QR code URL using QR Server API
+        function generateQRCode(upiUrl) {
+            return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
+        }
+
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = {
+                teamName: document.getElementById('teamName').value,
+                teamLead: {
+                    name: document.getElementById('member1Name').value,
+                    email: document.getElementById('member1Email').value,
+                    phone: document.getElementById('member1Phone').value
+                },
+                members: [
+                    {
+                        name: document.getElementById('member2Name').value,
+                        email: document.getElementById('member2Email').value,
+                        phone: document.getElementById('member2Phone').value
+                    },
+                    {
+                        name: document.getElementById('member3Name').value,
+                        email: document.getElementById('member3Email').value,
+                        phone: document.getElementById('member3Phone').value
+                    }
+                ],
+                timestamp: Date.now()
+            };
+
+            // Add optional member if details are provided
+            const member4Name = document.getElementById('member4Name').value;
+            if (member4Name) {
+                formData.members.push({
+                    name: member4Name,
+                    email: document.getElementById('member4Email').value,
+                    phone: document.getElementById('member4Phone').value
+                });
+            }
+
+            try {
+                const paymentSignature = await generatePaymentSignature(formData.timestamp);
+                const upiId = getEncryptedUpiId();
+                const upiUrl = `upi://pay?pa=${upiId}&pn=Team Registration&am=1&cu=INR&tn=Team Registration Fee`;
+
+                // Check if the user is on mobile
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (isMobile) {
+                    // For mobile devices, directly open UPI app
+                    window.location.href = upiUrl;
+                } else {
+                    // For desktop, show QR code and UPI details
+                    const qrCodeUrl = generateQRCode(upiUrl);
+                    document.getElementById('qrCode').src = qrCodeUrl;
+                    document.getElementById('upiIdDisplay').textContent = upiId;
+                    document.getElementById('paymentOptions').style.display = 'block';
+                    
+                    // Hide the form
+                    e.target.style.display = 'none';
+                }
+
+                showMessage('Please complete the payment using the QR code or UPI ID shown above.', 'success');
+            } catch (error) {
+                showMessage('Payment initialization failed. Please try again.', 'error');
+                console.error('Error:', error);
+            }
+        });
+
+        // Add copy UPI ID functionality
+        document.getElementById('copyUpiId').addEventListener('click', function() {
+            const upiId = getEncryptedUpiId();
+            navigator.clipboard.writeText(upiId).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => {
+                    this.textContent = 'Copy UPI ID';
+                }, 2000);
+            });
+        });
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
