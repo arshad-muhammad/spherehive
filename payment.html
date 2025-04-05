@@ -354,7 +354,7 @@
                 </div>
             </div>
 
-            <button type="submit">Pay Registration Fee (₹5)</button>
+            <button type="submit">Pay Registration Fee (₹10)</button>
         </form>
         <div id="message" class="message" style="display: none;"></div>
     </div>
@@ -364,7 +364,7 @@
             <img id="qrCode" alt="Payment QR Code" style="max-width: 200px; margin: 20px auto; display: block;">
             <div class="payment-details">
                 <p>UPI ID: <span id="upiIdDisplay"></span></p>
-                <p>Amount: ₹5</p>
+                <p>Amount: ₹10</p>
                 <button id="copyUpiId" class="secondary-button">Copy UPI ID</button>
             </div>
         </div>
@@ -374,7 +374,7 @@
         // Encryption function using SHA-256
         async function generatePaymentSignature(timestamp) {
             const secret = 'H@ckW1se2024'; // This should be stored securely server-side
-            const amount = '5'; // Changed from '1' to '5'
+            const amount = '10'; // Changed to '10'
             const dataToHash = `${amount}-${timestamp}-${secret}`;
             
             const msgBuffer = new TextEncoder().encode(dataToHash);
@@ -487,7 +487,7 @@
             try {
                 const paymentSignature = await generatePaymentSignature(formData.timestamp);
                 const upiId = getEncryptedUpiId();
-                const upiUrl = `upi://pay?pa=${upiId}&pn=Team Registration&am=5&cu=INR&tn=Team Registration Fee - ${formData.registrationId}`;
+                const upiUrl = `upi://pay?pa=${upiId}&pn=HackWise Registration&am=10&cu=INR&tn=Team Registration Fee - ${formData.registrationId}&mc=5411&tr=${formData.registrationId}`;
 
                 // Store registration data in localStorage for post-payment processing
                 localStorage.setItem('pendingRegistration', JSON.stringify(formData));
@@ -519,7 +519,7 @@
                             // Send notification to admin
                             await sendDetailsToAdmin(formData, {
                                 paymentId: paymentStatus.paymentId,
-                                amount: '5',
+                                amount: '10',
                                 status: 'SUCCESS',
                                 transactionId: paymentStatus.transactionId,
                                 paymentTimestamp: new Date().toISOString()
