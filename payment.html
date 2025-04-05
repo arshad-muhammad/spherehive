@@ -372,6 +372,12 @@
             100% { opacity: 1; }
         }
     </style>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("Nw3uuuKMCLKm8Vyit"); // Replace this with your actual public key from EmailJS dashboard
+        })();
+    </script>
 </head>
 <body>
     <div class="container">
@@ -612,60 +618,76 @@
         // Add this function to send formatted emails
         async function sendFormattedEmails(formData) {
             try {
-                // Format the email content
-                const emailContent = {
-                    teamName: formData.teamName,
-                    registrationId: formData.registrationId,
-                    paymentTimestamp: new Date().toLocaleString(),
-                    amount: '₹10',
-                    teamLead: {
-                        name: formData.teamLead.name,
-                        email: formData.teamLead.email,
-                        phone: formData.teamLead.phone
-                    },
-                    members: formData.members.map(member => ({
-                        name: member.name,
-                        email: member.email,
-                        phone: member.phone
-                    }))
+                // Format participant names
+                const participantNames = [
+                    formData.teamLead.name,
+                    ...formData.members.map(m => m.name)
+                ].join(', ');
+
+                // Common template variables
+                const templateVars = {
+                    to_name: formData.teamLead.name,
+                    team_name: formData.teamName,
+                    registration_id: formData.registrationId,
+                    payment_time: new Date().toLocaleString(),
+                    amount: '10',
+                    team_id: formData.registrationId,
+                    participant_names: participantNames,
+                    email: formData.teamLead.email,
+                    team_lead_details: `${formData.teamLead.name} (${formData.teamLead.email}, ${formData.teamLead.phone})`,
+                    member_details: formData.members.map((m, i) => 
+                        `Member ${i + 2}: ${m.name} (${m.email}, ${m.phone})`
+                    ).join('\n')
                 };
 
-                // Send to admin
-                await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        to: 'muhd.arshadra@gmail.com',
-                        subject: `New Team Registration - ${formData.teamName}`,
-                        content: emailContent,
-                        type: 'admin'
-                    })
-                });
+                console.log('Sending admin email with template vars:', templateVars);
 
-                // Send to team lead
-                await fetch('/api/send-email', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        to: formData.teamLead.email,
-                        subject: 'HackWise Registration Successful',
-                        content: emailContent,
-                        type: 'team'
-                    })
-                });
+                // Send email to admin
+                const adminEmailSent = await emailjs.send(
+                    "service_ieqfi6v",
+                    "template_ac0icp1",
+                    {
+                        ...templateVars,
+                        to_email: 'muhd.arshadra@gmail.com',
+                        email: 'muhd.arshadra@gmail.com'
+                    }
+                );
 
-                return true;
+                console.log('Admin email response:', adminEmailSent);
+
+                // Send email to team lead
+                const teamEmailSent = await emailjs.send(
+                    "service_ieqfi6v",
+                    "template_ac0icp1",
+                    {
+                        ...templateVars,
+                        to_email: formData.teamLead.email,
+                        email: formData.teamLead.email
+                    }
+                );
+
+                console.log('Team lead email response:', teamEmailSent);
+
+                if (adminEmailSent.status === 200 && teamEmailSent.status === 200) {
+                    console.log('Both emails sent successfully');
+                    return true;
+                } else {
+                    console.error('Email sending failed with responses:', { adminEmailSent, teamEmailSent });
+                    return false;
+                }
             } catch (error) {
-                console.error('Error sending emails:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    text: error.text,
+                    name: error.name,
+                    error: error
+                });
+                showMessage(`Error sending confirmation emails (${error.message}). Please save your registration ID: ${formData.registrationId}`, 'error');
                 return false;
             }
         }
 
-        // Add payment verification handler
+        // Modify the payment verification handler
         document.getElementById('verifyPayment').addEventListener('click', async function() {
             const formData = JSON.parse(localStorage.getItem('pendingRegistration'));
             if (!formData) {
@@ -673,41 +695,111 @@
                 return;
             }
 
+            // First ask for confirmation
+            const confirmPayment = confirm('Have you completed the payment? Click OK only if you have made the payment.');
+            if (!confirmPayment) {
+                showMessage('Please complete the payment before verification.', 'error');
+                return;
+            }
+
             try {
-                // Send emails
-                const emailsSent = await sendFormattedEmails(formData);
+                // Show loading state
+                this.disabled = true;
+                this.textContent = 'Verifying Payment...';
                 
-                if (emailsSent) {
-                    clearInterval(timerInterval); // Clear the timer
-                    showMessage('Registration and payment verified! Confirmation emails have been sent.', 'success');
-                    localStorage.removeItem('pendingRegistration');
+                // Add a payment reference number input
+                const paymentRef = prompt('Please enter the UPI reference number / Transaction ID:');
+                if (!paymentRef) {
+                    showMessage('Payment verification cancelled. Please provide the transaction ID.', 'error');
+                    this.disabled = false;
+                    this.textContent = 'I Have Made the Payment';
+                    return;
+                }
+
+                // Simulate payment verification (you'll need to implement actual verification)
+                const paymentVerified = await verifyPayment(formData.registrationId, paymentRef);
+                
+                if (paymentVerified) {
+                    // Send emails only if payment is verified
+                    const emailsSent = await sendFormattedEmails(formData);
                     
-                    // Hide payment options and show success state
-                    document.getElementById('paymentOptions').style.display = 'none';
-                    document.getElementById('registrationForm').style.display = 'none';
-                    
-                    // Show registration details
-                    const successDiv = document.createElement('div');
-                    successDiv.className = 'success-details';
-                    successDiv.innerHTML = `
-                        <h3>Registration Successful!</h3>
-                        <p>Team Name: ${formData.teamName}</p>
-                        <p>Registration ID: ${formData.registrationId}</p>
-                        <p>Please check your email for confirmation details.</p>
-                    `;
-                    document.querySelector('.container').appendChild(successDiv);
+                    if (emailsSent) {
+                        clearInterval(timerInterval);
+                        showMessage('Registration and payment verified! Confirmation emails have been sent.', 'success');
+                        localStorage.removeItem('pendingRegistration');
+                        
+                        // Hide payment options and show success state
+                        document.getElementById('paymentOptions').style.display = 'none';
+                        document.getElementById('registrationForm').style.display = 'none';
+                        
+                        // Show registration details
+                        const successDiv = document.createElement('div');
+                        successDiv.className = 'success-details';
+                        successDiv.innerHTML = `
+                            <h3>Registration Successful!</h3>
+                            <p>Team Name: ${formData.teamName}</p>
+                            <p>Registration ID: ${formData.registrationId}</p>
+                            <p>Transaction ID: ${paymentRef}</p>
+                            <p>Please check your email for confirmation details.</p>
+                        `;
+                        document.querySelector('.container').appendChild(successDiv);
+                    } else {
+                        showMessage('Payment verified but failed to send confirmation emails. Please contact support.', 'error');
+                    }
                 } else {
-                    showMessage('Payment verified but failed to send confirmation emails. Please contact support.', 'error');
+                    showMessage('Payment verification failed. Please ensure you have made the payment and try again.', 'error');
                 }
             } catch (error) {
                 showMessage('Failed to verify payment. Please try again or contact support.', 'error');
                 console.error('Error:', error);
+            } finally {
+                this.disabled = false;
+                this.textContent = 'I Have Made the Payment';
             }
         });
+
+        // Add this function to verify payment
+        async function verifyPayment(registrationId, paymentRef) {
+            try {
+                // Here you would typically make an API call to verify the payment
+                // For now, we'll simulate a basic verification
+                if (!paymentRef || paymentRef.length < 8) {
+                    return false;
+                }
+
+                // Simulate API call delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // You should implement actual payment verification logic here
+                // For example, checking against your backend/database
+                // For now, we'll do a basic check that the reference number is at least 8 characters
+                return paymentRef.length >= 8;
+            } catch (error) {
+                console.error('Payment verification error:', error);
+                return false;
+            }
+        }
 
         // Clean up timer when window is closed or refreshed
         window.addEventListener('beforeunload', function() {
             clearInterval(timerInterval);
+        });
+
+        // Add copy UPI ID functionality
+        document.getElementById('copyUpiId').addEventListener('click', function() {
+            const upiId = document.getElementById('upiIdDisplay').textContent;
+            navigator.clipboard.writeText(upiId)
+                .then(() => {
+                    const originalText = this.textContent;
+                    this.textContent = 'Copied!';
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                    showMessage('Failed to copy UPI ID. Please try copying manually.', 'error');
+                });
         });
     </script>
 </body>
