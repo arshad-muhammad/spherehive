@@ -424,7 +424,7 @@
                 </div>
             </div>
 
-            <button type="submit">Pay Registration Fee (₹10)</button>
+            <button type="submit">Pay Registration Fee (₹500)</button>
         </form>
         <div id="message" class="message" style="display: none;"></div>
     </div>
@@ -437,7 +437,7 @@
             <img id="qrCode" alt="Payment QR Code" style="max-width: 200px; margin: 20px auto; display: block;">
             <div class="payment-details">
                 <p>UPI ID: <span id="upiIdDisplay"></span></p>
-                <p>Amount: ₹10</p>
+                <p>Amount: ₹500</p>
                 <button id="copyUpiId" class="secondary-button">Copy UPI ID</button>
             </div>
             <button id="verifyPayment" class="primary-button" style="display: none; margin-top: 20px;">
@@ -524,7 +524,7 @@
             try {
                 const paymentSignature = await generatePaymentSignature(formData.timestamp);
                 const upiId = getEncryptedUpiId();
-                const upiUrl = `upi://pay?pa=${upiId}&pn=HackWise Registration&am=10&cu=INR&tn=Team Registration Fee - ${formData.registrationId}&mc=5411&tr=${formData.registrationId}`;
+                const upiUrl = `upi://pay?pa=${upiId}&pn=HackWise Registration&am=500&cu=INR&tn=Team Registration Fee - ${formData.registrationId}&mc=5411&tr=${formData.registrationId}`;
 
                 localStorage.setItem('pendingRegistration', JSON.stringify(formData));
 
@@ -579,7 +579,7 @@
         // Restore these functions
         async function generatePaymentSignature(timestamp) {
             const secret = 'H@ckW1se2024';
-            const amount = '10';
+            const amount = '500';
             const dataToHash = `${amount}-${timestamp}-${secret}`;
             
             const msgBuffer = new TextEncoder().encode(dataToHash);
@@ -630,7 +630,7 @@
                     team_name: formData.teamName,
                     registration_id: formData.registrationId,
                     payment_time: new Date().toLocaleString(),
-                    amount: '10',
+                    amount: '500',
                     team_id: formData.registrationId,
                     participant_names: participantNames,
                     email: formData.teamLead.email,
