@@ -414,7 +414,7 @@
             </div>
 
             <!-- Optional Member -->
-<!--             <h3>Optional Member</h3> -->
+         
             <div class="member-section">
                 <div class="form-group">
                     <label>Member 4 </label>
@@ -615,8 +615,8 @@
             return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiUrl)}`;
         }
 
-        // Add this function to send formatted emails
-        async function sendFormattedEmails(formData) {
+        // Modify the sendFormattedEmails function to accept transactionId parameter
+        async function sendFormattedEmails(formData, transactionId) {
             try {
                 // Format participant names
                 const participantNames = [
@@ -634,6 +634,7 @@
                     team_id: formData.registrationId,
                     participant_names: participantNames,
                     email: formData.teamLead.email,
+                    transaction_id: transactionId,  // Add transaction ID
                     team_lead_details: `${formData.teamLead.name} (${formData.teamLead.email}, ${formData.teamLead.phone})`,
                     member_details: formData.members.map((m, i) => 
                         `Member ${i + 2}: ${m.name} (${m.email}, ${m.phone})`
@@ -721,7 +722,7 @@
                 
                 if (paymentVerified) {
                     // Send emails only if payment is verified
-                    const emailsSent = await sendFormattedEmails(formData);
+                    const emailsSent = await sendFormattedEmails(formData, paymentRef);
                     
                     if (emailsSent) {
                         clearInterval(timerInterval);
